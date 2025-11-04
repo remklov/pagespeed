@@ -13,6 +13,7 @@ import {
 import { ReportScore } from "./report-score";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Gauge,
   PersonStanding,
@@ -31,6 +32,7 @@ interface ReportsDisplayProps {
 
 export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps) {
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [activeFilter, setActiveFilter] = React.useState("All");
 
   if (initialReports.length === 0) {
     return (
@@ -46,21 +48,36 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
     );
   }
 
-  const filteredReports = initialReports.filter((report) =>
-    report.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const reportTypes = ["All", ...Array.from(new Set(initialReports.map((r) => r.type)))];
+
+  const filteredReports = initialReports.filter((report) => {
+    const nameMatch = report.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const typeMatch = activeFilter === "All" || report.type === activeFilter;
+    return nameMatch && typeMatch;
+  });
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Performance Breakdown</CardTitle>
-        <div className="pt-4">
+        <div className="pt-4 flex flex-col sm:flex-row gap-4">
           <Input
             placeholder="Search by project name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
+          <div className="flex items-center gap-2">
+            {reportTypes.map((type) => (
+              <Button
+                key={type}
+                variant={activeFilter === type ? "default" : "outline"}
+                onClick={() => setActiveFilter(type)}
+              >
+                {type}
+              </Button>
+            ))}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -154,7 +171,7 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
         </div>
         {filteredReports.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">
-            No projects found for &quot;{searchTerm}&quot;.
+            No projects found matching your criteria.
           </div>
         )}
       </CardContent>
