@@ -46,7 +46,7 @@ export function ReportDetailsDialog({
             <Accordion type="single" collapsible className="w-full">
               {report.opportunities.map((opp, index) => (
                 <AccordionItem value={`item-${index}`} key={index}>
-                  <AccordionTrigger>{opp.title}</AccordionTrigger>
+                  <AccordionTrigger className="text-left">{opp.title}</AccordionTrigger>
                   <AccordionContent>
                     <div
                       className="prose prose-sm dark:prose-invert"
