@@ -18,9 +18,12 @@ interface LighthouseReport {
     seo: { score: number | null };
   };
   audits?: {
-    "first-contentful-paint"?: { numericValue: number };
-    "largest-contentful-paint"?: { numericValue: number };
-    "speed-index"?: { numericValue: number };
+    [key: string]: {
+      score: number | null;
+      title: string;
+      description: string;
+      numericValue?: number;
+    }
   }
 }
 
@@ -43,6 +46,12 @@ export async function scanReports(): Promise<{ data: Report[], error: string | n
               const fileContent = await fs.readFile(filePath, "utf-8");
               const jsonContent: LighthouseReport = JSON.parse(fileContent);
 
+              const opportunities = jsonContent.audits 
+                ? Object.values(jsonContent.audits)
+                    .filter(audit => audit.score !== null && audit.score < 0.9)
+                    .map(audit => ({ title: audit.title, description: audit.description }))
+                : [];
+
               const reportData: Report = {
                 type: type,
                 name: cleanName(path.basename(file, ".json")),
@@ -56,7 +65,8 @@ export async function scanReports(): Promise<{ data: Report[], error: string | n
                   firstContentfulPaint: jsonContent.audits?.["first-contentful-paint"]?.numericValue ?? 0,
                   largestContentfulPaint: jsonContent.audits?.["largest-contentful-paint"]?.numericValue ?? 0,
                   speedIndex: jsonContent.audits?.["speed-index"]?.numericValue ?? 0,
-                }
+                },
+                opportunities,
               };
               allReports.push(reportData);
             } catch (e) {

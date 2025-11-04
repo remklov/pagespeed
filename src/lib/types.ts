@@ -12,6 +12,10 @@ export interface Report {
     largestContentfulPaint: number;
     speedIndex: number;
   };
+  opportunities: {
+    title: string;
+    description: string;
+  }[];
 }
 
 // This is no longer used but kept for potential future reference.
