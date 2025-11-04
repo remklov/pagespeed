@@ -17,7 +17,7 @@ interface LighthouseReport {
     "best-practices": { score: number | null };
     seo: { score: number | null };
   };
-  audits: {
+  audits?: {
     "first-contentful-paint": { numericValue: number };
     "largest-contentful-paint": { numericValue: number };
     "speed-index": { numericValue: number };
@@ -57,9 +57,9 @@ export async function scanReports(): Promise<{ data: GroupedReports, error: stri
                   seo: Math.round((jsonContent.categories.seo.score ?? 0) * 100),
                 },
                 metrics: {
-                  firstContentfulPaint: jsonContent.audits["first-contentful-paint"]?.numericValue ?? 0,
-                  largestContentfulPaint: jsonContent.audits["largest-contentful-paint"]?.numericValue ?? 0,
-                  speedIndex: jsonContent.audits["speed-index"]?.numericValue ?? 0,
+                  firstContentfulPaint: jsonContent.audits?.["first-contentful-paint"]?.numericValue ?? 0,
+                  largestContentfulPaint: jsonContent.audits?.["largest-contentful-paint"]?.numericValue ?? 0,
+                  speedIndex: jsonContent.audits?.["speed-index"]?.numericValue ?? 0,
                 }
               };
               groupedReports[type].push(reportData);
