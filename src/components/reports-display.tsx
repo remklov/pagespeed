@@ -23,6 +23,9 @@ import {
   CheckCircle,
   Globe,
   Info,
+  Timer,
+  AreaChart,
+  Zap,
 } from "lucide-react";
 
 interface ReportsDisplayProps {
@@ -66,7 +69,7 @@ export function ReportsDisplay({ reports }: ReportsDisplayProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-semibold w-[250px]">
+                      <TableHead className="font-semibold w-[200px]">
                         Project
                       </TableHead>
                       <TableHead className="font-semibold text-center">
@@ -93,6 +96,24 @@ export function ReportsDisplay({ reports }: ReportsDisplayProps) {
                           SEO
                         </div>
                       </TableHead>
+                       <TableHead className="font-semibold text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Timer className="h-5 w-5 text-primary" />
+                          FCP
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-semibold text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <AreaChart className="h-5 w-5 text-primary" />
+                          LCP
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-semibold text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Zap className="h-5 w-5 text-primary" />
+                          Speed Index
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -110,6 +131,15 @@ export function ReportsDisplay({ reports }: ReportsDisplayProps) {
                         </TableCell>
                         <TableCell className="text-center">
                           <ReportScore score={report.scores.seo} />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {(report.metrics.firstContentfulPaint / 1000).toFixed(1)}s
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {(report.metrics.largestContentfulPaint / 1000).toFixed(1)}s
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {(report.metrics.speedIndex / 1000).toFixed(1)}s
                         </TableCell>
                       </TableRow>
                     ))}
