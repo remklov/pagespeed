@@ -1,0 +1,8 @@
+{
+  "categories": {
+    "performance": { "score": 0.65, "auditRefs": [] },
+    "accessibility": { "score": 0.78, "auditRefs": [] },
+    "best-practices": { "score": 1.0, "auditRefs": [] },
+    "seo": { "score": 0.99, "auditRefs": [] }
+  }
+}

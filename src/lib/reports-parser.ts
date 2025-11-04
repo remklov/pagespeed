@@ -1,0 +1,80 @@
+import fs from "fs/promises";
+import path from "path";
+import type { Report, GroupedReports } from "./types";
+
+const REPORTS_DIR = path.join(process.cwd(), "reports");
+
+const cleanName = (name: string): string => {
+  return name
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+interface LighthouseReport {
+  categories: {
+    performance: { score: number | null };
+    accessibility: { score: number | null };
+    "best-practices": { score: number | null };
+    seo: { score: number | null };
+  };
+}
+
+export async function scanReports(): Promise<{ data: GroupedReports, error: string | null }> {
+  const groupedReports: GroupedReports = {};
+  
+  try {
+    const reportTypes = await fs.readdir(REPORTS_DIR, { withFileTypes: true });
+
+    for (const typeDirent of reportTypes) {
+      if (typeDirent.isDirectory()) {
+        const type = typeDirent.name;
+        const typePath = path.join(REPORTS_DIR, type);
+        const files = await fs.readdir(typePath);
+
+        if (!groupedReports[type]) {
+          groupedReports[type] = [];
+        }
+
+        for (const file of files) {
+          if (path.extname(file) === ".json") {
+            const filePath = path.join(typePath, file);
+            try {
+              const fileContent = await fs.readFile(filePath, "utf-8");
+              const jsonContent: LighthouseReport = JSON.parse(fileContent);
+
+              const reportData: Report = {
+                type: type,
+                name: cleanName(path.basename(file, ".json")),
+                scores: {
+                  performance: Math.round((jsonContent.categories.performance.score ?? 0) * 100),
+                  accessibility: Math.round((jsonContent.categories.accessibility.score ?? 0) * 100),
+                  bestPractices: Math.round((jsonContent.categories["best-practices"].score ?? 0) * 100),
+                  seo: Math.round((jsonContent.categories.seo.score ?? 0) * 100),
+                },
+              };
+              groupedReports[type].push(reportData);
+            } catch (e) {
+              console.error(`Error parsing file ${filePath}:`, e);
+              // Optionally skip this file and continue
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort reports alphabetically by name within each type
+    for (const type in groupedReports) {
+      groupedReports[type].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return { data: groupedReports, error: null };
+
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        console.warn("Reports directory not found. Please create a './reports' directory.");
+        return { data: {}, error: "The './reports' directory was not found. Please create it and add your report files." };
+    }
+    console.error("Error scanning reports directory:", error);
+    return { data: {}, error: "An unexpected error occurred while scanning for reports." };
+  }
+}
