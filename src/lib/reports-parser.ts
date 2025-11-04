@@ -18,9 +18,9 @@ interface LighthouseReport {
     seo: { score: number | null };
   };
   audits?: {
-    "first-contentful-paint": { numericValue: number };
-    "largest-contentful-paint": { numericValue: number };
-    "speed-index": { numericValue: number };
+    "first-contentful-paint"?: { numericValue: number };
+    "largest-contentful-paint"?: { numericValue: number };
+    "speed-index"?: { numericValue: number };
   }
 }
 
@@ -68,8 +68,8 @@ export async function scanReports(): Promise<{ data: Report[], error: string | n
       }
     }
     
-    // Sort reports by name descending
-    allReports.sort((a, b) => b.name.localeCompare(a.name));
+    // Sort reports by name ascending
+    allReports.sort((a, b) => a.name.localeCompare(b.name));
 
     return { data: allReports, error: null };
 

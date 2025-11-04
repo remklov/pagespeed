@@ -24,15 +24,21 @@ import {
   AreaChart,
   Zap,
   Folder,
+  ArrowUpDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ReportsDisplayProps {
   reports: Report[];
 }
 
+type SortKey = keyof Report | `scores.${keyof Report['scores']}` | `metrics.${keyof Report['metrics']}`;
+
 export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [activeFilter, setActiveFilter] = React.useState("All");
+  const [sortConfig, setSortConfig] = React.useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'name', direction: 'ascending'});
+
 
   if (initialReports.length === 0) {
     return (
@@ -47,7 +53,7 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
       </Card>
     );
   }
-
+  
   const reportTypes = ["All", ...Array.from(new Set(initialReports.map((r) => r.type)))];
 
   const filteredReports = initialReports.filter((report) => {
@@ -55,6 +61,44 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
     const typeMatch = activeFilter === "All" || report.type === activeFilter;
     return nameMatch && typeMatch;
   });
+
+  const sortedReports = React.useMemo(() => {
+    if (sortConfig !== null) {
+      return [...filteredReports].sort((a, b) => {
+        const aValue = sortConfig.key.includes('.') ? sortConfig.key.split('.').reduce((o, i) => o[i as keyof typeof o], a as any) : a[sortConfig.key as keyof Report];
+        const bValue = sortConfig.key.includes('.') ? sortConfig.key.split('.').reduce((o, i) => o[i as keyof typeof o], b as any) : b[sortConfig.key as keyof Report];
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return filteredReports;
+  }, [filteredReports, sortConfig]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const getSortIndicator = (key: SortKey) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+    return sortConfig.direction === 'ascending' ? (
+      <ArrowUpDown className="h-4 w-4" />
+    ) : (
+      <ArrowUpDown className="h-4 w-4" />
+    );
+  };
+
 
   return (
     <Card>
@@ -86,60 +130,78 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
             <TableHeader>
               <TableRow>
                 <TableHead className="font-semibold w-[200px]">
-                  Project
+                  <Button variant="ghost" onClick={() => requestSort('name')}>
+                    Project {getSortIndicator('name')}
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold w-[150px]">
-                  <div className="flex items-center gap-2">
-                    <Folder className="h-5 w-5 text-primary" />
-                    Type
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('type')}>
+                    <div className="flex items-center gap-2">
+                      <Folder className="h-5 w-5 text-primary" />
+                      Type {getSortIndicator('type')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Gauge className="h-5 w-5 text-primary" />
-                    Performance
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('scores.performance')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <Gauge className="h-5 w-5 text-primary" />
+                      Performance {getSortIndicator('scores.performance')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <PersonStanding className="h-5 w-5 text-primary" />
-                    Accessibility
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('scores.accessibility')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <PersonStanding className="h-5 w-5 text-primary" />
+                      Accessibility {getSortIndicator('scores.accessibility')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-primary" />
-                    Best Practices
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('scores.bestPractices')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      Best Practices {getSortIndicator('scores.bestPractices')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Globe className="h-5 w-5 text-primary" />
-                    SEO
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('scores.seo')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <Globe className="h-5 w-5 text-primary" />
+                      SEO {getSortIndicator('scores.seo')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Timer className="h-5 w-5 text-primary" />
-                    FCP
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('metrics.firstContentfulPaint')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <Timer className="h-5 w-5 text-primary" />
+                      FCP {getSortIndicator('metrics.firstContentfulPaint')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <AreaChart className="h-5 w-5 text-primary" />
-                    LCP
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('metrics.largestContentfulPaint')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <AreaChart className="h-5 w-5 text-primary" />
+                      LCP {getSortIndicator('metrics.largestContentfulPaint')}
+                    </div>
+                  </Button>
                 </TableHead>
                 <TableHead className="font-semibold text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Zap className="h-5 w-5 text-primary" />
-                    Speed Index
-                  </div>
+                  <Button variant="ghost" onClick={() => requestSort('metrics.speedIndex')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <Zap className="h-5 w-5 text-primary" />
+                      Speed Index {getSortIndicator('metrics.speedIndex')}
+                    </div>
+                  </Button>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReports.map((report) => (
+              {sortedReports.map((report) => (
                 <TableRow key={`${report.type}-${report.name}`}>
                   <TableCell className="font-medium">{report.name}</TableCell>
                   <TableCell>{report.type}</TableCell>
@@ -169,7 +231,7 @@ export function ReportsDisplay({ reports: initialReports }: ReportsDisplayProps)
             </TableBody>
           </Table>
         </div>
-        {filteredReports.length === 0 && (
+        {sortedReports.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">
             No projects found matching your criteria.
           </div>
