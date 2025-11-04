@@ -23,6 +23,7 @@ interface LighthouseReport {
       title: string;
       description: string;
       numericValue?: number;
+      displayValue?: string;
     }
   }
 }
@@ -49,7 +50,11 @@ export async function scanReports(): Promise<{ data: Report[], error: string | n
               const opportunities = jsonContent.audits 
                 ? Object.values(jsonContent.audits)
                     .filter(audit => audit.score !== null && audit.score < 0.9)
-                    .map(audit => ({ title: audit.title, description: audit.description }))
+                    .map(audit => ({ 
+                      title: audit.title, 
+                      description: audit.description,
+                      displayValue: audit.displayValue,
+                    }))
                 : [];
 
               const reportData: Report = {

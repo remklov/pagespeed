@@ -15,6 +15,7 @@ export interface Report {
   opportunities: {
     title: string;
     description: string;
+    displayValue?: string;
   }[];
 }
 

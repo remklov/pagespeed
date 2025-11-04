@@ -48,6 +48,11 @@ export function ReportDetailsDialog({
                 <AccordionItem value={`item-${index}`} key={index}>
                   <AccordionTrigger className="text-left">{opp.title}</AccordionTrigger>
                   <AccordionContent>
+                    {opp.displayValue && (
+                      <p className="mb-2 font-semibold text-primary">
+                        Est. Savings: {opp.displayValue}
+                      </p>
+                    )}
                     <div
                       className="prose prose-sm dark:prose-invert"
                       dangerouslySetInnerHTML={{ __html: parseDescription(opp.description) }}
