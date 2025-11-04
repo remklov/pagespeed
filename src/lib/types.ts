@@ -14,6 +14,7 @@ export interface Report {
   };
 }
 
+// This is no longer used but kept for potential future reference.
 export interface GroupedReports {
   [type: string]: Report[];
 }

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import type { Report, GroupedReports } from "./types";
+import type { Report } from "./types";
 
 const REPORTS_DIR = path.join(process.cwd(), "reports");
 
@@ -24,8 +24,8 @@ interface LighthouseReport {
   }
 }
 
-export async function scanReports(): Promise<{ data: GroupedReports, error: string | null }> {
-  const groupedReports: GroupedReports = {};
+export async function scanReports(): Promise<{ data: Report[], error: string | null }> {
+  const allReports: Report[] = [];
   
   try {
     const reportTypes = await fs.readdir(REPORTS_DIR, { withFileTypes: true });
@@ -35,10 +35,6 @@ export async function scanReports(): Promise<{ data: GroupedReports, error: stri
         const type = typeDirent.name;
         const typePath = path.join(REPORTS_DIR, type);
         const files = await fs.readdir(typePath);
-
-        if (!groupedReports[type]) {
-          groupedReports[type] = [];
-        }
 
         for (const file of files) {
           if (path.extname(file) === ".json") {
@@ -51,10 +47,10 @@ export async function scanReports(): Promise<{ data: GroupedReports, error: stri
                 type: type,
                 name: cleanName(path.basename(file, ".json")),
                 scores: {
-                  performance: Math.round((jsonContent.categories.performance.score ?? 0) * 100),
-                  accessibility: Math.round((jsonContent.categories.accessibility.score ?? 0) * 100),
-                  bestPractices: Math.round((jsonContent.categories["best-practices"].score ?? 0) * 100),
-                  seo: Math.round((jsonContent.categories.seo.score ?? 0) * 100),
+                  performance: Math.round((jsonContent.categories.performance?.score ?? 0) * 100),
+                  accessibility: Math.round((jsonContent.categories.accessibility?.score ?? 0) * 100),
+                  bestPractices: Math.round((jsonContent.categories["best-practices"]?.score ?? 0) * 100),
+                  seo: Math.round((jsonContent.categories.seo?.score ?? 0) * 100),
                 },
                 metrics: {
                   firstContentfulPaint: jsonContent.audits?.["first-contentful-paint"]?.numericValue ?? 0,
@@ -62,7 +58,7 @@ export async function scanReports(): Promise<{ data: GroupedReports, error: stri
                   speedIndex: jsonContent.audits?.["speed-index"]?.numericValue ?? 0,
                 }
               };
-              groupedReports[type].push(reportData);
+              allReports.push(reportData);
             } catch (e) {
               console.error(`Error parsing file ${filePath}:`, e);
               // Optionally skip this file and continue
@@ -72,19 +68,17 @@ export async function scanReports(): Promise<{ data: GroupedReports, error: stri
       }
     }
     
-    // Sort reports alphabetically by name within each type
-    for (const type in groupedReports) {
-      groupedReports[type].sort((a, b) => a.name.localeCompare(b.name));
-    }
+    // Sort reports by name descending
+    allReports.sort((a, b) => b.name.localeCompare(a.name));
 
-    return { data: groupedReports, error: null };
+    return { data: allReports, error: null };
 
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         console.warn("Reports directory not found. Please create a './reports' directory.");
-        return { data: {}, error: "The './reports' directory was not found. Please create it and add your report files." };
+        return { data: [], error: "The './reports' directory was not found. Please create it and add your report files." };
     }
     console.error("Error scanning reports directory:", error);
-    return { data: {}, error: "An unexpected error occurred while scanning for reports." };
+    return { data: [], error: "An unexpected error occurred while scanning for reports." };
   }
 }
